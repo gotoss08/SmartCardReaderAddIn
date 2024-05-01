@@ -128,8 +128,7 @@ xpcsc::Reader Connection::wait_for_reader_card(const std::string & reader_name, 
 
   //  sc_reader_states[0].szReader = reader_name[0];
 
-	std::wstring stemp = std::wstring(reader_name.begin(), reader_name.end());
-	sc_reader_states[0].szReader = (LPCSTR) stemp.c_str();
+	sc_reader_states[0].szReader = reader_name.c_str();
 
     //while (1) {
     //    // get current state
@@ -150,7 +149,7 @@ xpcsc::Reader Connection::wait_for_reader_card(const std::string & reader_name, 
 
     DWORD active_protocol;
 
-    PCSC_CALL( SCardConnect(p->context, (LPCSTR) stemp.c_str(),
+    PCSC_CALL( SCardConnect(p->context, reader_name.c_str(),
         SCARD_SHARE_SHARED, preferred_protocols,
         &(reader.handle), &active_protocol) );
 
