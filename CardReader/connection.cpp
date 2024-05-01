@@ -277,7 +277,7 @@ void Connection::wait_for_card_remove(const std::string & reader_name)
 
     SCARD_READERSTATE sc_reader_states[1];
 
-    sc_reader_states[0].szReader = (LPCSTR)reader_name.c_str();
+    sc_reader_states[0].szReader = reader_name.c_str();
 
     DWORD state;
 
