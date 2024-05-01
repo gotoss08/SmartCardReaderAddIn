@@ -50,7 +50,7 @@ SmartCardReaderAddIn::SmartCardReaderAddIn() {
     AddMethod(L"Assign", L"Присвоить", this, &SmartCardReaderAddIn::assign);
     AddMethod(L"SamplePropertyValue", L"ЗначениеСвойстваОбразца", this, &SmartCardReaderAddIn::samplePropertyValue);
 
-    AddMethod(L"SmartCardTest", L"ТестСмарКарты", this, &SmartCardReaderAddIn::smartCardTest);
+    AddMethod(L"SmartCardTest", L"ТестСмартКарты", this, &SmartCardReaderAddIn::smartCardTest);
 
     // Method registration with default arguments
     //
@@ -118,6 +118,45 @@ void SmartCardReaderAddIn::smartCardTest()
     catch (xpcsc::PCSCError& e) {
         throw std::runtime_error(std::string(e.what()));
     }
+
+    try {
+        auto readers = c.readers();
+    }
+    catch (xpcsc::PCSCError& e) {
+        throw std::runtime_error(std::string(e.what()));
+    }
+
+    xpcsc::Reader reader;
+
+    try {
+        auto readers = c.readers();
+        auto reader_name = *readers.begin();
+        reader = c.wait_for_reader_card(reader_name);
+    }
+    catch (xpcsc::PCSCError& e) {
+        throw std::runtime_error(std::string(e.what()));
+    }
+
+    LPCSCARD_IO_REQUEST protocol;
+    if (reader.send_pci->dwProtocol == 1)
+        protocol = SCARD_PCI_T0;
+    else
+        protocol = SCARD_PCI_T1;
+
+    xpcsc::Bytes command;
+    xpcsc::Bytes response;
+    uint16_t response_status;
+
+    //	command.assign(xpcsc::parse_apdu("00 A4 00 0C"));  // для выбора MF // выбирать по id, первое или единственное вхождение, нет данных ответа
+    command.assign(xpcsc::parse_apdu("00 A4 00 0C 02 3F 00"));  // для выбора MF // выбирать по id, первое или единственное вхождение, нет данных ответа // Для новых УЛ 2023
+    c.transmit(reader, command, &response);
+    response_status = c.response_status(response);
+
+    if (response_status != 0x9000) {
+        //		std::cerr << "Failed to fetch MF: " << c.response_status_str(response) << std::endl;
+        throw std::runtime_error(std::string(c.response_status_str(response)));
+    }
+
 }
 
 // Despite that you can return property value through method this is not recommended
